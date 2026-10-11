@@ -1,0 +1,58 @@
+{
+  "focus": "RJF",
+  "trend_hidden_by_default": ["AMP"],
+  "companies": [
+    {
+      "ticker": "RJF",
+      "name": "Raymond James Financial",
+      "cik": 720005,
+      "notes": [
+        "Fiscal year ends September 30. Tangible equity here does not net deferred tax liabilities on intangibles, so TBV per share runs slightly below the company's reported figure."
+      ]
+    },
+    {
+      "ticker": "SF",
+      "name": "Stifel Financial",
+      "cik": 720672,
+      "notes": []
+    },
+    {
+      "ticker": "LPLA",
+      "name": "LPL Financial",
+      "cik": 1397911,
+      "skip": ["comp_ratio", "pretax_margin"],
+      "notes": [
+        "LPL reports revenue before advisor payouts, which it books as a separate expense rather than compensation. Compensation ratio and pre-tax margin are not comparable and are left blank.",
+        "LPL's goodwill and intangibles exceed its equity, so tangible book value is negative and return on tangible equity is left blank."
+      ]
+    },
+    {
+      "ticker": "AMP",
+      "name": "Ameriprise Financial",
+      "cik": 820027,
+      "notes": [
+        "Ameriprise does not tag a total compensation expense, so the compensation ratio is blank.",
+        "Ameriprise tags goodwill and intangibles only in its annual report, so tangible equity uses the latest year-end values.",
+        "Ameriprise's equity is reduced by large unrealized losses on its insurance investment portfolio, which pushes its return on equity far above the other firms."
+      ]
+    },
+    {
+      "ticker": "MS",
+      "name": "Morgan Stanley",
+      "cik": 895421,
+      "overrides": {
+        "preferred": {
+          "value": 9750000000,
+          "note": "Morgan Stanley stopped tagging preferred stock separately. $9.75bn is total equity less common equity (book value per share times shares) from the Q2 2026 earnings release. Update it if the company issues or redeems preferred stock."
+        }
+      },
+      "notes": []
+    },
+    {
+      "ticker": "SCHW",
+      "name": "Charles Schwab",
+      "cik": 316709,
+      "notes": []
+    }
+  ]
+}

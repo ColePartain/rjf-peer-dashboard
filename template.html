@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RJF Peer Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f3f0;
+    --surface-1: #fcfcfb;
+    --border: #e2e1dc;
+    --grid: #ebeae6;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #7a7974;
+    --focus: #2a78d6;
+    --peer: #a3a29c;
+    --peer-line: #bdbcb6;
+    --median: #52514e;
+    --row-focus: #eaf2fc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #121211;
+      --surface-1: #1a1a19;
+      --border: #2e2e2c;
+      --grid: #262624;
+      --text-primary: #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8f8e88;
+      --focus: #3987e5;
+      --peer: #6b6a65;
+      --peer-line: #57564f;
+      --median: #c3c2b7;
+      --row-focus: #1c2a3c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --border: #2e2e2c;
+    --grid: #262624;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8e88;
+    --focus: #3987e5;
+    --peer: #6b6a65;
+    --peer-line: #57564f;
+    --median: #c3c2b7;
+    --row-focus: #1c2a3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .sub { color: var(--text-secondary); margin: 0; }
+  .meta { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 18px 14px;
+    margin-top: 16px;
+  }
+  .card-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+  .card-head p { margin: 0; color: var(--text-secondary); font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .tile .label { color: var(--text-secondary); font-size: 12px; }
+  .tile .value { font-size: 28px; font-weight: 650; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .tile .compare { color: var(--text-muted); font-size: 12px; }
+  select, button.seg {
+    font: inherit; font-size: 13px; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+  }
+  .segs { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+  button.seg { cursor: pointer; }
+  button.seg[aria-pressed="true"] { border-color: var(--focus); color: var(--focus); font-weight: 600; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin: 2px 0 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  .swatch.dash { height: 0; border-top: 2px dashed var(--median); border-radius: 0; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { fill: var(--text-secondary); font-size: 12px; }
+  svg text.halo { paint-order: stroke; stroke: var(--surface-1); stroke-width: 4px; stroke-linejoin: round; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; color: var(--text-secondary);
+    background: none; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+  .chip[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+  .chip.static { cursor: default; }
+  .tip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); max-width: 280px;
+  }
+  .tip b { font-weight: 600; }
+  .tip .muted { color: var(--text-muted); }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+  th, td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface-1); }
+  thead th { color: var(--text-secondary); font-weight: 600; cursor: pointer; user-select: none; vertical-align: bottom; white-space: normal; min-width: 76px; }
+  thead th[aria-sort] { color: var(--text-primary); }
+  tr.focus td { background: var(--row-focus); font-weight: 600; }
+  tr.median td { color: var(--text-secondary); font-style: italic; border-top: 1px solid var(--border); }
+  td.na { color: var(--text-muted); }
+  .notes { color: var(--text-secondary); font-size: 13px; }
+  .notes ul { padding-left: 18px; margin: 6px 0; }
+  .notes li { margin: 3px 0; }
+  a { color: var(--focus); }
+  @media (max-width: 600px) { .tile .value { font-size: 24px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Raymond James vs. Wealth Management Peers</h1>
+    <p class="sub">Trailing twelve month ratios computed from each company's SEC filings, refreshed automatically every weekday.</p>
+    <p class="meta" id="meta"></p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="Raymond James headline metrics"></section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2 id="bar-title">Compare one metric</h2>
+        <p>Latest reported quarter. Raymond James in blue, peers in gray, dashed line is the peer median.</p>
+      </div>
+      <label>Metric <select id="bar-metric"></select></label>
+    </div>
+    <div id="bar-chart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Trend over the last eight quarters</h2>
+        <p>Each point is a trailing twelve month figure at that quarter end.</p>
+      </div>
+      <div class="segs" id="trend-metric" role="group" aria-label="Trend metric"></div>
+    </div>
+    <div class="legend" id="trend-legend"></div>
+    <div id="trend-chart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>All metrics</h2>
+        <p>Click a column header to sort. Hover a value to see the period and source.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table id="table"></table></div>
+  </section>
+
+  <section class="card notes">
+    <h2>Method and sources</h2>
+    <ul>
+      <li>Financial data comes from the SEC's XBRL company facts API (data.sec.gov). Income figures are trailing twelve months: the last full fiscal year plus this year to date, less last year to date.</li>
+      <li>Return on equity and return on tangible equity use average common equity over the last year. Common equity excludes preferred stock. Tangible equity also excludes goodwill and intangible assets.</li>
+      <li>Net revenue is revenue net of interest expense where the company reports it. P/E uses reported GAAP diluted EPS, so it can differ from multiples based on adjusted earnings.</li>
+      <li>Share prices come from Yahoo Finance. Peer median excludes Raymond James.</li>
+    </ul>
+    <div id="company-notes"></div>
+    <p class="meta">Built by Cole Partain. For research and education, not investment advice.</p>
+  </section>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const FOCUS = DATA.focus;
+const METRIC = Object.fromEntries(DATA.metrics.map(m => [m.key, m]));
+const companies = DATA.companies;
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const NS = "http://www.w3.org/2000/svg";
+
+function fmt(v, kind) {
+  if (v === null || v === undefined || !isFinite(v)) return "n/a";
+  if (kind === "pct") return (v * 100).toFixed(1) + "%";
+  if (kind === "x") return v.toFixed(1) + "x";
+  const sign = v < 0 ? "-" : "";
+  if (kind === "usd") return sign + "$" + Math.abs(v).toFixed(2);
+  if (kind === "bn") return sign + "$" + Math.abs(v).toFixed(1) + "bn";
+  return String(v);
+}
+function niceTicks(min, max, count) {
+  const span = (max - min) || Math.abs(max) || 1;
+  const raw = span / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(s => s >= raw);
+  const start = Math.floor(min / step) * step, end = Math.ceil(max / step) * step;
+  const out = [];
+  for (let v = start; v <= end + step / 2; v += step) out.push(Math.round(v / step) * step);
+  return out;
+}
+function el(tag, attrs = {}, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function niceDate(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function quarterLabel(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return "Q" + (Math.floor(d.getMonth() / 3) + 1) + " " + String(d.getFullYear()).slice(2);
+}
+
+// Tooltip -----------------------------------------------------------------
+const tip = document.getElementById("tip");
+function showTip(evt, html) {
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + w > window.innerWidth - 8) x = evt.clientX - w - pad;
+  if (y + h > window.innerHeight - 8) y = evt.clientY - h - pad;
+  tip.style.left = x + "px";
+  tip.style.top = y + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+
+// Header and tiles ----------------------------------------------------------
+const focusCo = companies.find(c => c.ticker === FOCUS);
+const priceNote = focusCo && focusCo.price ? ` Prices as of ${niceDate(focusCo.price.as_of)}.` : "";
+document.getElementById("meta").textContent =
+  `Updated ${DATA.generated_at}. Latest filings through ${niceDate(companies.map(c => c.period_end).sort().at(-1))}.${priceNote}`;
+
+function rankOf(key, ticker) {
+  const vals = companies.filter(c => c.metrics[key] != null).sort((a, b) => b.metrics[key] - a.metrics[key]);
+  const i = vals.findIndex(c => c.ticker === ticker);
+  return i < 0 ? null : { rank: i + 1, of: vals.length };
+}
+const tileKeys = ["roe", "rotce", "pretax_margin", "pe"];
+const tileLabels = { roe: "Return on equity", rotce: "Return on tangible equity", pretax_margin: "Pre-tax margin", pe: "P/E on trailing EPS" };
+const tiles = document.getElementById("tiles");
+for (const key of tileKeys) {
+  const m = METRIC[key];
+  const v = focusCo ? focusCo.metrics[key] : null;
+  const r = focusCo ? rankOf(key, FOCUS) : null;
+  const div = document.createElement("div");
+  div.className = "tile";
+  div.innerHTML = `<div class="label">RJF ${tileLabels[key]}</div>
+    <div class="value">${fmt(v, m.fmt)}</div>
+    <div class="compare">Peer median ${fmt(DATA.peer_median[key], m.fmt)}${r ? ` · ${ordinal(r.rank)} highest of ${r.of}` : ""}</div>`;
+  tiles.appendChild(div);
+}
+
+// Bar chart ---------------------------------------------------------------
+const barSelect = document.getElementById("bar-metric");
+let group = "";
+for (const m of DATA.metrics) {
+  if (m.group !== group) {
+    group = m.group;
+    const og = document.createElement("optgroup");
+    og.label = group;
+    barSelect.appendChild(og);
+  }
+  const opt = new Option(m.label, m.key);
+  barSelect.lastChild.appendChild(opt);
+}
+barSelect.value = "roe";
+barSelect.addEventListener("change", drawBars);
+
+function drawBars() {
+  const key = barSelect.value, m = METRIC[key];
+  const host = document.getElementById("bar-chart");
+  host.innerHTML = "";
+  const rows = companies.map(c => ({ c, v: c.metrics[key] }))
+    .sort((a, b) => (b.v ?? -Infinity) - (a.v ?? -Infinity));
+  const narrow = host.clientWidth < 560;
+  const W = Math.max(host.clientWidth, 320), rowH = 34, top = 6, labelW = narrow ? 56 : 200, right = 70;
+  const H = top + rows.length * rowH + 22;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${m.label} by company` }, host);
+  const vals = rows.map(r => r.v).filter(v => v != null);
+  const median = DATA.peer_median[key];
+  const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals, median ?? 0);
+  const x = v => labelW + ((v - lo) / ((hi - lo) || 1)) * (W - labelW - right);
+  el("line", { x1: x(0), x2: x(0), y1: top - 4, y2: H - 20, stroke: css("--border") }, svg);
+  const medianLayer = el("g", {}, svg);
+
+  rows.forEach((r, i) => {
+    const y = top + i * rowH, isFocus = r.c.ticker === FOCUS;
+    const name = el("text", { x: 0, y: y + rowH / 2 + 4 }, svg);
+    name.textContent = narrow ? r.c.ticker : `${r.c.ticker}  ${r.c.name}`;
+    if (isFocus) { name.style.fill = css("--text-primary"); name.style.fontWeight = "600"; }
+    if (r.v == null) {
+      const na = el("text", { x: x(0) + 6, y: y + rowH / 2 + 4 }, svg);
+      na.textContent = "not comparable";
+      na.style.fill = css("--text-muted");
+    } else {
+      const x0 = Math.min(x(0), x(r.v)), w = Math.max(Math.abs(x(r.v) - x(0)), 2);
+      el("rect", { x: x0, y: y + 7, width: w, height: rowH - 14, rx: 4, fill: isFocus ? css("--focus") : css("--peer") }, svg);
+      const lab = el("text", { class: "halo", x: r.v >= 0 ? x(r.v) + 6 : x(r.v) - 6, y: y + rowH / 2 + 4, "text-anchor": r.v >= 0 ? "start" : "end" }, svg);
+      lab.textContent = fmt(r.v, m.fmt);
+      lab.style.fill = css("--text-primary");
+    }
+    const hit = el("rect", { x: 0, y, width: W, height: rowH, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", e => showTip(e, cellTip(r.c, key)));
+    hit.addEventListener("mouseleave", hideTip);
+  });
+  if (median != null) {
+    el("line", { x1: x(median), x2: x(median), y1: top - 4, y2: H - 20, stroke: css("--median"), "stroke-width": 1.5, "stroke-dasharray": "4 4" }, medianLayer);
+    const t = el("text", { x: x(median), y: H - 4, "text-anchor": "middle" }, svg);
+    t.textContent = `Peer median ${fmt(median, m.fmt)}`;
+  }
+}
+
+function cellTip(c, key) {
+  const m = METRIC[key], v = c.metrics[key];
+  const source = { roe: "net_income_common", rotce: "net_income_common", pretax_margin: "pretax_income",
+    comp_ratio: "compensation", net_revenue: "net_revenue", revenue_growth: "net_revenue",
+    net_income_common: "net_income_common", eps_diluted: "eps_diluted", bvps: "total_equity",
+    tbvps: "total_equity", equity_to_assets: "assets" }[key];
+  const tag = source && c.tags[source] ? `<div class="muted">XBRL: ${c.tags[source]}</div>` : "";
+  const price = ["pe", "pb", "ptbv", "div_yield", "market_cap"].includes(key) && c.price
+    ? `<div class="muted">Price $${c.price.price.toFixed(2)} on ${niceDate(c.price.as_of)}</div>` : "";
+  return `<b>${c.name}</b><div>${m.label}: <b>${fmt(v, m.fmt)}</b></div>
+    <div class="muted">Period ending ${niceDate(c.period_end)} (${c.filing.form})</div>${tag}${price}`;
+}
+
+// Trend chart -------------------------------------------------------------
+const trendSegs = document.getElementById("trend-metric");
+let trendKey = DATA.trend_metrics[0];
+for (const key of DATA.trend_metrics) {
+  const b = document.createElement("button");
+  b.className = "seg";
+  b.textContent = METRIC[key].label;
+  b.setAttribute("aria-pressed", key === trendKey);
+  b.addEventListener("click", () => {
+    trendKey = key;
+    trendSegs.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    drawTrend();
+  });
+  trendSegs.appendChild(b);
+}
+const hidden = new Set(DATA.trend_hidden || []);
+const legend = document.getElementById("trend-legend");
+legend.innerHTML = `<span class="chip static"><i class="swatch" style="background:var(--focus)"></i>Raymond James</span>`;
+for (const c of companies.filter(c => c.ticker !== FOCUS)) {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.innerHTML = `<i class="swatch" style="background:var(--peer-line)"></i>${c.ticker}`;
+  b.setAttribute("aria-pressed", !hidden.has(c.ticker));
+  b.title = "Show or hide this peer";
+  b.addEventListener("click", () => {
+    hidden.has(c.ticker) ? hidden.delete(c.ticker) : hidden.add(c.ticker);
+    b.setAttribute("aria-pressed", !hidden.has(c.ticker));
+    drawTrend();
+  });
+  legend.appendChild(b);
+}
+if (hidden.size) {
+  const note = document.createElement("span");
+  note.textContent = `Click a ticker to show or hide it. ${[...hidden].join(", ")} starts hidden because its outlier values flatten the other lines.`;
+  legend.appendChild(note);
+}
+
+function drawTrend() {
+  const key = trendKey, m = METRIC[key];
+  const host = document.getElementById("trend-chart");
+  host.innerHTML = "";
+  const dates = [...new Set(Object.values(DATA.trend).flat().map(p => p.end))].sort().slice(-8);
+  const series = companies.map(c => ({
+    c, pts: (DATA.trend[c.ticker] || []).filter(p => dates.includes(p.end) && p[key] != null)
+  })).filter(s => s.pts.length && !hidden.has(s.c.ticker));
+  const W = Math.max(host.clientWidth, 320), H = 300, L = 48, R = 64, T = 10, B = 28;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${m.label} trend` }, host);
+  const all = series.flatMap(s => s.pts.map(p => p[key]));
+  const tickVals = niceTicks(Math.min(...all), Math.max(...all), 5);
+  const lo = tickVals[0], hi = tickVals.at(-1);
+  const x = d => L + (dates.indexOf(d) / Math.max(dates.length - 1, 1)) * (W - L - R);
+  const y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+
+  for (const v of tickVals) {
+    el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--grid") }, svg);
+    const t = el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
+    t.textContent = fmt(v, m.fmt);
+  }
+  dates.forEach(d => {
+    const t = el("text", { x: x(d), y: H - 8, "text-anchor": "middle" }, svg);
+    t.textContent = quarterLabel(d);
+  });
+
+  const ordered = [...series].sort((a, b) => (a.c.ticker === FOCUS) - (b.c.ticker === FOCUS));
+  const ends = [];
+  for (const s of ordered) {
+    const isFocus = s.c.ticker === FOCUS;
+    const d = s.pts.map((p, i) => `${i ? "L" : "M"}${x(p.end)},${y(p[key])}`).join(" ");
+    el("path", { d, fill: "none", stroke: isFocus ? css("--focus") : css("--peer-line"),
+      "stroke-width": isFocus ? 2.5 : 1.5, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    const last = s.pts.at(-1);
+    if (isFocus) el("circle", { cx: x(last.end), cy: y(last[key]), r: 4, fill: css("--focus"), stroke: css("--surface-1"), "stroke-width": 2 }, svg);
+    ends.push({ ticker: s.c.ticker, x: x(last.end), y: y(last[key]), isFocus });
+  }
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].y = ends[i - 1].y + 13;
+  for (const e of ends) {
+    const t = el("text", { x: e.x + 8, y: e.y + 4 }, svg);
+    t.textContent = e.ticker;
+    if (e.isFocus) { t.style.fill = css("--text-primary"); t.style.fontWeight = "600"; }
+  }
+
+  const cross = el("line", { y1: T, y2: H - B, stroke: css("--median"), "stroke-width": 1, visibility: "hidden" }, svg);
+  const hit = el("rect", { x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent" }, svg);
+  hit.addEventListener("mousemove", evt => {
+    const box = svg.getBoundingClientRect();
+    const px = (evt.clientX - box.left) * (W / box.width);
+    const d = dates.reduce((best, cur) => Math.abs(x(cur) - px) < Math.abs(x(best) - px) ? cur : best, dates[0]);
+    cross.setAttribute("x1", x(d)); cross.setAttribute("x2", x(d)); cross.setAttribute("visibility", "visible");
+    const rows = series.map(s => ({ s, p: s.pts.find(p => p.end === d) })).filter(r => r.p)
+      .sort((a, b) => b.p[key] - a.p[key])
+      .map(r => `<div>${r.s.c.ticker === FOCUS ? "<b>" : ""}${r.s.c.ticker}: ${fmt(r.p[key], m.fmt)}${r.s.c.ticker === FOCUS ? "</b>" : ""}</div>`).join("");
+    showTip(evt, `<b>Quarter ending ${niceDate(d)}</b>${rows}`);
+  });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+}
+
+// Table -------------------------------------------------------------------
+let sortKey = null, sortDir = -1;
+function drawTable() {
+  const table = document.getElementById("table");
+  const rows = [...companies];
+  if (sortKey) rows.sort((a, b) => sortDir * ((a.metrics[sortKey] ?? -Infinity) - (b.metrics[sortKey] ?? -Infinity)));
+  let html = "<thead><tr><th scope=\"col\">Company</th>";
+  for (const m of DATA.metrics) {
+    const sorted = sortKey === m.key ? ` aria-sort="${sortDir < 0 ? "descending" : "ascending"}"` : "";
+    html += `<th scope="col" data-key="${m.key}"${sorted}>${m.label}${sortKey === m.key ? (sortDir < 0 ? " ↓" : " ↑") : ""}</th>`;
+  }
+  html += "</tr></thead><tbody>";
+  for (const c of rows) {
+    html += `<tr class="${c.ticker === FOCUS ? "focus" : ""}"><td>${c.ticker} <span style="color:var(--text-muted);font-weight:400">${c.name}</span></td>`;
+    for (const m of DATA.metrics) {
+      const v = c.metrics[m.key];
+      html += `<td class="${v == null ? "na" : ""}" data-t="${c.ticker}" data-k="${m.key}">${fmt(v, m.fmt)}</td>`;
+    }
+    html += "</tr>";
+  }
+  html += `<tr class="median"><td>Peer median</td>${DATA.metrics.map(m => `<td>${fmt(DATA.peer_median[m.key], m.fmt)}</td>`).join("")}</tr>`;
+  table.innerHTML = html + "</tbody>";
+  table.querySelectorAll("th[data-key]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.key;
+    sortDir = sortKey === k ? -sortDir : -1;
+    sortKey = k;
+    drawTable();
+  }));
+  table.querySelectorAll("td[data-k]").forEach(td => {
+    const c = companies.find(x => x.ticker === td.dataset.t);
+    td.addEventListener("mousemove", e => showTip(e, cellTip(c, td.dataset.k)));
+    td.addEventListener("mouseleave", hideTip);
+  });
+}
+
+// Notes ---------------------------------------------------------------------
+const notesHost = document.getElementById("company-notes");
+let notesHtml = "<ul>";
+for (const c of companies) {
+  const filing = `<a href="${c.filing.url}">${c.filing.form} filed ${niceDate(c.filing.filed)}</a>`;
+  notesHtml += `<li><b>${c.ticker}</b>: latest data from ${filing}.${c.notes.length ? " " + c.notes.join(" ") : ""}</li>`;
+}
+notesHost.innerHTML = notesHtml + "</ul>";
+
+function drawAll() { drawBars(); drawTrend(); drawTable(); }
+drawAll();
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { drawBars(); drawTrend(); }, 150); });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+</script>
+</body>
+</html>

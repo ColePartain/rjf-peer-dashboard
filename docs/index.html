@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RJF Peer Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f3f0;
+    --surface-1: #fcfcfb;
+    --border: #e2e1dc;
+    --grid: #ebeae6;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #7a7974;
+    --focus: #2a78d6;
+    --peer: #a3a29c;
+    --peer-line: #bdbcb6;
+    --median: #52514e;
+    --row-focus: #eaf2fc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #121211;
+      --surface-1: #1a1a19;
+      --border: #2e2e2c;
+      --grid: #262624;
+      --text-primary: #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8f8e88;
+      --focus: #3987e5;
+      --peer: #6b6a65;
+      --peer-line: #57564f;
+      --median: #c3c2b7;
+      --row-focus: #1c2a3c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --border: #2e2e2c;
+    --grid: #262624;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8e88;
+    --focus: #3987e5;
+    --peer: #6b6a65;
+    --peer-line: #57564f;
+    --median: #c3c2b7;
+    --row-focus: #1c2a3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .sub { color: var(--text-secondary); margin: 0; }
+  .meta { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 18px 14px;
+    margin-top: 16px;
+  }
+  .card-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+  .card-head p { margin: 0; color: var(--text-secondary); font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .tile .label { color: var(--text-secondary); font-size: 12px; }
+  .tile .value { font-size: 28px; font-weight: 650; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .tile .compare { color: var(--text-muted); font-size: 12px; }
+  select, button.seg {
+    font: inherit; font-size: 13px; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+  }
+  .segs { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+  button.seg { cursor: pointer; }
+  button.seg[aria-pressed="true"] { border-color: var(--focus); color: var(--focus); font-weight: 600; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin: 2px 0 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  .swatch.dash { height: 0; border-top: 2px dashed var(--median); border-radius: 0; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { fill: var(--text-secondary); font-size: 12px; }
+  svg text.halo { paint-order: stroke; stroke: var(--surface-1); stroke-width: 4px; stroke-linejoin: round; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; color: var(--text-secondary);
+    background: none; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+  .chip[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+  .chip.static { cursor: default; }
+  .tip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); max-width: 280px;
+  }
+  .tip b { font-weight: 600; }
+  .tip .muted { color: var(--text-muted); }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+  th, td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface-1); }
+  thead th { color: var(--text-secondary); font-weight: 600; cursor: pointer; user-select: none; vertical-align: bottom; white-space: normal; min-width: 76px; }
+  thead th[aria-sort] { color: var(--text-primary); }
+  tr.focus td { background: var(--row-focus); font-weight: 600; }
+  tr.median td { color: var(--text-secondary); font-style: italic; border-top: 1px solid var(--border); }
+  td.na { color: var(--text-muted); }
+  .notes { color: var(--text-secondary); font-size: 13px; }
+  .notes ul { padding-left: 18px; margin: 6px 0; }
+  .notes li { margin: 3px 0; }
+  a { color: var(--focus); }
+  @media (max-width: 600px) { .tile .value { font-size: 24px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Raymond James vs. Wealth Management Peers</h1>
+    <p class="sub">Trailing twelve month ratios computed from each company's SEC filings, refreshed automatically every weekday.</p>
+    <p class="meta" id="meta"></p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="Raymond James headline metrics"></section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2 id="bar-title">Compare one metric</h2>
+        <p>Latest reported quarter. Raymond James in blue, peers in gray, dashed line is the peer median.</p>
+      </div>
+      <label>Metric <select id="bar-metric"></select></label>
+    </div>
+    <div id="bar-chart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Trend over the last eight quarters</h2>
+        <p>Each point is a trailing twelve month figure at that quarter end.</p>
+      </div>
+      <div class="segs" id="trend-metric" role="group" aria-label="Trend metric"></div>
+    </div>
+    <div class="legend" id="trend-legend"></div>
+    <div id="trend-chart"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>All metrics</h2>
+        <p>Click a column header to sort. Hover a value to see the period and source.</p>
+      </div>
+    </div>
+    <div class="table-wrap"><table id="table"></table></div>
+  </section>
+
+  <section class="card notes">
+    <h2>Method and sources</h2>
+    <ul>
+      <li>Financial data comes from the SEC's XBRL company facts API (data.sec.gov). Income figures are trailing twelve months: the last full fiscal year plus this year to date, less last year to date.</li>
+      <li>Return on equity and return on tangible equity use average common equity over the last year. Common equity excludes preferred stock. Tangible equity also excludes goodwill and intangible assets.</li>
+      <li>Net revenue is revenue net of interest expense where the company reports it. P/E uses reported GAAP diluted EPS, so it can differ from multiples based on adjusted earnings.</li>
+      <li>Share prices come from Yahoo Finance. Peer median excludes Raymond James.</li>
+    </ul>
+    <div id="company-notes"></div>
+    <p class="meta">Built by Cole Partain. For research and education, not investment advice.</p>
+  </section>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const DATA = {"generated_at": "2026-10-11 21:28 UTC", "focus": "RJF", "metrics": [{"key": "roe", "label": "Return on equity", "fmt": "pct", "group": "Profitability"}, {"key": "rotce", "label": "Return on tangible equity", "fmt": "pct", "group": "Profitability"}, {"key": "pretax_margin", "label": "Pre-tax margin", "fmt": "pct", "group": "Profitability"}, {"key": "comp_ratio", "label": "Compensation ratio", "fmt": "pct", "group": "Profitability"}, {"key": "revenue_growth", "label": "Net revenue growth", "fmt": "pct", "group": "Growth"}, {"key": "net_revenue", "label": "Net revenue ($bn)", "fmt": "bn", "group": "Growth"}, {"key": "net_income_common", "label": "Net income to common ($bn)", "fmt": "bn", "group": "Growth"}, {"key": "eps_diluted", "label": "Diluted EPS ($)", "fmt": "usd", "group": "Per share"}, {"key": "bvps", "label": "Book value per share ($)", "fmt": "usd", "group": "Per share"}, {"key": "tbvps", "label": "Tangible book per share ($)", "fmt": "usd", "group": "Per share"}, {"key": "equity_to_assets", "label": "Equity to assets", "fmt": "pct", "group": "Balance sheet"}, {"key": "pe", "label": "P/E (TTM)", "fmt": "x", "group": "Valuation"}, {"key": "pb", "label": "Price to book", "fmt": "x", "group": "Valuation"}, {"key": "ptbv", "label": "Price to tangible book", "fmt": "x", "group": "Valuation"}, {"key": "div_yield", "label": "Dividend yield", "fmt": "pct", "group": "Valuation"}, {"key": "market_cap", "label": "Market cap ($bn)", "fmt": "bn", "group": "Valuation"}], "trend_metrics": ["roe", "rotce", "pretax_margin"], "companies": [{"ticker": "RJF", "name": "Raymond James Financial", "cik": 720005, "period_end": "2026-06-30", "filing": {"form": "10-Q", "filed": "2026-08-05", "url": "https://www.sec.gov/Archives/edgar/data/720005/000072000526000070/0000720005-26-000070-index.htm"}, "price": {"price": 158.38, "as_of": "2026-10-09", "source": "Yahoo Finance"}, "metrics": {"net_revenue": 15.249, "net_income_common": 2.302, "revenue_growth": 0.10499999999999998, "pretax_margin": 0.19306184012066366, "comp_ratio": 0.6534198963866483, "roe": 0.18505566944009003, "rotce": 0.22556464651413455, "equity_to_assets": 0.13475598756327134, "eps_diluted": 11.47, "bvps": 66.01625621847374, "tbvps": 52.45846456418762, "pe": 13.808195292066259, "pb": 2.3991060546641467, "ptbv": 3.0191505091844215, "div_yield": 0.013385528475817655, "market_cap": 30.46624778818}, "tags": {"net_revenue": "RevenuesNetOfInterestExpense", "net_income_common": "NetIncomeLossAvailableToCommonStockholdersBasic", "net_income": "NetIncomeLoss", "income_tax": "IncomeTaxExpenseBenefit", "pretax_income": "NetIncomeLoss + IncomeTaxExpenseBenefit", "compensation": "LaborAndRelatedExpense", "total_equity": "StockholdersEquity", "preferred": "PreferredStockValue", "goodwill_and_intangibles": "IntangibleAssetsNetIncludingGoodwill", "assets": "Assets", "shares_outstanding": "dei:EntityCommonStockSharesOutstanding", "eps_diluted": "EarningsPerShareDiluted", "dps_declared": "CommonStockDividendsPerShareDeclared"}, "notes": ["Fiscal year ends September 30. Tangible equity here does not net deferred tax liabilities on intangibles, so TBV per share runs slightly below the company's reported figure."]}, {"ticker": "SF", "name": "Stifel Financial", "cik": 720672, "period_end": "2026-06-30", "filing": {"form": "10-Q", "filed": "2026-08-05", "url": "https://www.sec.gov/Archives/edgar/data/720672/000119312526333953/0001193125-26-333953-index.htm"}, "price": {"price": 70.34, "as_of": "2026-10-09", "source": "Yahoo Finance"}, "metrics": {"net_revenue": 5.91894, "net_income_common": 0.916347, "revenue_growth": 0.15399080346376226, "pretax_margin": 0.20602759953640348, "comp_ratio": 0.5822539170865053, "roe": 0.17897007351204944, "rotce": 0.258372388195105, "equity_to_assets": 0.13390249745872687, "eps_diluted": 7.549999999999999, "bvps": 34.546474836936085, "tbvps": 24.47958297132928, "pe": 9.31655629139073, "pb": 2.0360977590916027, "ptbv": 2.873414963089154, "div_yield": 0.027011657662780776, "market_cap": 10.84881956}, "tags": {"net_revenue": "RevenuesNetOfInterestExpense", "net_income_common": "NetIncomeLossAvailableToCommonStockholdersBasic", "pretax_income": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest", "compensation": "LaborAndRelatedExpense", "total_equity": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", "preferred": "PreferredStockValue", "goodwill": "Goodwill", "intangibles": "IntangibleAssetsNetExcludingGoodwill", "assets": "Assets", "shares_outstanding": "WeightedAverageNumberOfSharesOutstandingBasic (latest quarter average)", "eps_diluted": "EarningsPerShareDiluted", "dps_declared": "CommonStockDividendsPerShareDeclared"}, "notes": []}, {"ticker": "LPLA", "name": "LPL Financial", "cik": 1397911, "period_end": "2026-06-30", "filing": {"form": "10-Q", "filed": "2026-08-03", "url": "https://www.sec.gov/Archives/edgar/data/1397911/000162828026051542/0001628280-26-051542-index.htm"}, "price": {"price": 330.88, "as_of": "2026-10-09", "source": "Yahoo Finance"}, "metrics": {"net_revenue": 19.609504, "net_income_common": 1.006867, "revenue_growth": 0.38820710535073566, "pretax_margin": null, "comp_ratio": null, "roe": 0.1859187891044215, "rotce": null, "equity_to_assets": 0.2908799501998876, "eps_diluted": 12.48, "bvps": 73.10988796490425, "tbvps": -4.55178532399807, "pe": 26.51282051282051, "pb": 4.525790002014994, "ptbv": null, "div_yield": null, "market_cap": 26.054248915200002}, "tags": {"net_revenue": "Revenues", "net_income_common": "NetIncomeLoss", "pretax_income": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest", "compensation": "LaborAndRelatedExpense", "total_equity": "StockholdersEquity", "goodwill": "Goodwill", "intangibles": "IntangibleAssetsNetExcludingGoodwill", "assets": "Assets", "shares_outstanding": "dei:EntityCommonStockSharesOutstanding", "eps_diluted": "EarningsPerShareDiluted"}, "notes": ["LPL reports revenue before advisor payouts, which it books as a separate expense rather than compensation. Compensation ratio and pre-tax margin are not comparable and are left blank.", "LPL's goodwill and intangibles exceed its equity, so tangible book value is negative and return on tangible equity is left blank."]}, {"ticker": "AMP", "name": "Ameriprise Financial", "cik": 820027, "period_end": "2026-06-30", "filing": {"form": "10-Q", "filed": "2026-08-04", "url": "https://www.sec.gov/Archives/edgar/data/820027/000082002726000043/0000820027-26-000043-index.htm"}, "price": {"price": 500.51, "as_of": "2026-10-09", "source": "Yahoo Finance"}, "metrics": {"net_revenue": 19.503, "net_income_common": 3.948, "revenue_growth": 0.10642763941680378, "pretax_margin": 0.25903707121981234, "comp_ratio": null, "roe": 0.634318766066838, "rotce": 1.08521165475536, "equity_to_assets": 0.03217247600709553, "eps_diluted": 41.39, "bvps": 72.06801780879286, "tbvps": 42.634017447049, "pe": 12.092534428605942, "pb": 6.944966924550738, "ptbv": 11.739686521956983, "div_yield": null, "market_cap": 44.21165944169}, "tags": {"net_revenue": "RevenuesNetOfInterestExpense", "net_income_common": "NetIncomeLossAvailableToCommonStockholdersBasic", "pretax_income": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest", "total_equity": "StockholdersEquity", "goodwill": "Goodwill", "intangibles_finite": "FiniteLivedIntangibleAssetsNet", "intangibles_indefinite": "IndefiniteLivedIntangibleAssetsExcludingGoodwill", "assets": "Assets", "shares_outstanding": "dei:EntityCommonStockSharesOutstanding", "eps_diluted": "EarningsPerShareDiluted"}, "notes": ["Ameriprise does not tag a total compensation expense, so the compensation ratio is blank.", "Ameriprise tags goodwill and intangibles only in its annual report, so tangible equity uses the latest year-end values.", "Ameriprise's equity is reduced by large unrealized losses on its insurance investment portfolio, which pushes its return on equity far above the other firms."]}, {"ticker": "MS", "name": "Morgan Stanley", "cik": 895421, "period_end": "2026-06-30", "filing": {"form": "10-Q", "filed": "2026-08-04", "url": "https://www.sec.gov/Archives/edgar/data/895421/000089542126000212/0000895421-26-000212-index.htm"}, "price": {"price": 190.02, "as_of": "2026-10-09", "source": "Yahoo Finance"}, "metrics": {"net_revenue": 78.042, "net_income_common": 19.547, "revenue_growth": 0.18000514084400554, "pretax_margin": 0.33503754388662516, "comp_ratio": 0.4002203941467415, "roe": 0.19069034646583388, "rotce": 0.24569496467985621, "equity_to_assets": 0.0694477859559406, "eps_diluted": 12.379999999999999, "bvps": 67.86023649105542, "tbvps": 53.229844818291824, "pe": 15.348949919224557, "pb": 2.8001670761204367, "ptbv": 3.5698018780378225, "div_yield": 0.021050415745710975, "market_cap": 298.43900680584005}, "tags": {"net_revenue": "RevenuesNetOfInterestExpense", "net_income_common": "NetIncomeLossAvailableToCommonStockholdersBasic", "pretax_income": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest", "compensation": "LaborAndRelatedExpense", "total_equity": "StockholdersEquity", "preferred": "manual override (see notes)", "goodwill": "Goodwill", "intangibles": "IntangibleAssetsNetExcludingGoodwill", "assets": "Assets", "shares_outstanding": "dei:EntityCommonStockSharesOutstanding", "eps_diluted": "EarningsPerShareDiluted", "dps_declared": "CommonStockDividendsPerShareDeclared"}, "notes": ["Morgan Stanley stopped tagging preferred stock separately. $9.75bn is total equity less common equity (book value per share times shares) from the Q2 2026 earnings release. Update it if the company issues or redeems preferred stock."]}, {"ticker": "SCHW", "name": "Charles Schwab", "cik": 316709, "period_end": "2026-06-30", "filing": {"form": "10-Q", "filed": "2026-08-07", "url": "https://www.sec.gov/Archives/edgar/data/316709/000031670926000031/0000316709-26-000031-index.htm"}, "price": {"price": 96.7, "as_of": "2026-10-09", "source": "Yahoo Finance"}, "metrics": {"net_revenue": 26.025, "net_income_common": 9.722, "revenue_growth": 0.2034125589568112, "pretax_margin": 0.5017483189241114, "comp_ratio": 0.26455331412103744, "roe": 0.22446953429844613, "rotce": 0.408393018420113, "equity_to_assets": 0.09694625202507028, "eps_diluted": 5.49, "bvps": 25.40513079347646, "tbvps": 14.086911987524013, "pe": 17.61384335154827, "pb": 3.806317738967542, "ptbv": 6.864527874216987, "div_yield": 0.01220268872802482, "market_cap": 167.22676354380002}, "tags": {"net_revenue": "Revenues", "net_income_common": "NetIncomeLossAvailableToCommonStockholdersBasic", "pretax_income": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest", "compensation": "LaborAndRelatedExpense", "total_equity": "StockholdersEquity", "preferred": "PreferredStockValue", "goodwill": "Goodwill", "intangibles": "IntangibleAssetsNetExcludingGoodwill", "assets": "Assets", "shares_outstanding": "dei:EntityCommonStockSharesOutstanding", "eps_diluted": "EarningsPerShareDiluted", "dps_declared": "CommonStockDividendsPerShareDeclared"}, "notes": []}], "peer_median": {"roe": 0.19069034646583388, "rotce": 0.333382703307609, "pretax_margin": 0.2970373075532188, "comp_ratio": 0.4002203941467415, "revenue_growth": 0.18000514084400554, "net_revenue": 19.609504, "net_income_common": 3.948, "eps_diluted": 12.379999999999999, "bvps": 67.86023649105542, "tbvps": 24.47958297132928, "equity_to_assets": 0.09694625202507028, "pe": 15.348949919224557, "pb": 3.806317738967542, "ptbv": 5.217164876127405, "div_yield": 0.021050415745710975, "market_cap": 44.21165944169}, "trend": {"RJF": [{"end": "2024-09-30", "roe": 0.18988448617055548, "rotce": 0.23004014272970563, "pretax_margin": 0.20614616644567507}, {"end": "2024-12-31", "roe": 0.19197517180226115, "rotce": 0.23045398903613817, "pretax_margin": 0.20696890221056574}, {"end": "2025-03-31", "roe": 0.1895997916485806, "rotce": 0.22645030846596506, "pretax_margin": 0.20719002201027145}, {"end": "2025-06-30", "roe": 0.1826766246029702, "rotce": 0.21765367699703386, "pretax_margin": 0.19876811594202898}, {"end": "2025-09-30", "roe": 0.1773669747689233, "rotce": 0.21000739462657136, "pretax_margin": 0.19296125133309633}, {"end": "2025-12-31", "roe": 0.17201561536881035, "rotce": 0.20281990406511943, "pretax_margin": 0.18881020823108743}, {"end": "2026-03-31", "roe": 0.1734412955465587, "rotce": 0.20534943917169973, "pretax_margin": 0.18730892044296488}, {"end": "2026-06-30", "roe": 0.18505566944009003, "rotce": 0.22556464651413455, "pretax_margin": 0.19306184012066366}], "SF": [{"end": "2024-09-30", "roe": 0.129925382362105, "rotce": 0.19167457779007122, "pretax_margin": 0.18270936320303569}, {"end": "2024-12-31", "roe": 0.1444352271896093, "rotce": 0.2109436007638484, "pretax_margin": 0.18679763073604919}, {"end": "2025-03-31", "roe": 0.12359821044559134, "rotce": 0.18169034937673406, "pretax_margin": 0.15270689789009967}, {"end": "2025-06-30", "roe": 0.11911990950414288, "rotce": 0.1758189586959962, "pretax_margin": 0.14818238269639636}, {"end": "2025-09-30", "roe": 0.12594357056545594, "rotce": 0.1831029615304872, "pretax_margin": 0.15550374374300807}, {"end": "2025-12-31", "roe": 0.12560569966039728, "rotce": 0.1792493739422452, "pretax_margin": 0.15753734811645415}, {"end": "2026-03-31", "roe": 0.16644393375219205, "rotce": 0.23840958508535257, "pretax_margin": 0.1971077573933206}, {"end": "2026-06-30", "roe": 0.17897007351204944, "rotce": 0.258372388195105, "pretax_margin": 0.20602759953640348}], "LPLA": [{"end": "2024-09-30", "roe": 0.41355487554446535, "rotce": null, "pretax_margin": null}, {"end": "2024-12-31", "roe": 0.4226365438546657, "rotce": null, "pretax_margin": null}, {"end": "2025-03-31", "roe": 0.4035939205705064, "rotce": null, "pretax_margin": null}, {"end": "2025-06-30", "roe": 0.2945741520519152, "rotce": null, "pretax_margin": null}, {"end": "2025-09-30", "roe": 0.2132020864809847, "rotce": null, "pretax_margin": null}, {"end": "2025-12-31", "roe": 0.20858366806294604, "rotce": null, "pretax_margin": null}, {"end": "2026-03-31", "roe": 0.2045193334230094, "rotce": null, "pretax_margin": null}, {"end": "2026-06-30", "roe": 0.1859187891044215, "rotce": null, "pretax_margin": null}], "AMP": [{"end": "2024-09-30", "roe": 0.5675052410901468, "rotce": 1.2215703971119134, "pretax_margin": 0.20346165323783946}, {"end": "2024-12-31", "roe": 0.6831374912122126, "rotce": 1.4283914321713567, "pretax_margin": 0.24716172381835033}, {"end": "2025-03-31", "roe": 0.5810771470160117, "rotce": 1.1718199608610567, "pretax_margin": 0.21377060439560439}, {"end": "2025-06-30", "roe": 0.582392776523702, "rotce": 1.096938775510204, "pretax_margin": 0.2289101945878482}, {"end": "2025-09-30", "roe": 0.5958915365653246, "rotce": 1.0397132616487454, "pretax_margin": 0.25326008545585704}, {"end": "2025-12-31", "roe": 0.6050776938099686, "rotce": 1.07887963663891, "pretax_margin": 0.24372294372294373}, {"end": "2026-03-31", "roe": 0.6693589963911325, "rotce": 1.2047633776678008, "pretax_margin": 0.26196008026190726}, {"end": "2026-06-30", "roe": 0.634318766066838, "rotce": 1.08521165475536, "pretax_margin": 0.25903707121981234}], "MS": [{"end": "2024-09-30", "roe": 0.11582805222570054, "rotce": 0.1560470242468773, "pretax_margin": 0.2530376150871068}, {"end": "2024-12-31", "roe": 0.13909339360713724, "rotce": 0.186686891079867, "pretax_margin": 0.2849047133304189}, {"end": "2025-03-31", "roe": 0.14681250335102675, "rotce": 0.1957884952271996, "pretax_margin": 0.29123423031508294}, {"end": "2025-06-30", "roe": 0.1493257584557387, "rotce": 0.1977803730148185, "pretax_margin": 0.29171265706034444}, {"end": "2025-09-30", "roe": 0.16035320361240335, "rotce": 0.21040748451991456, "pretax_margin": 0.30589463307141407}, {"end": "2025-12-31", "roe": 0.16526395549294914, "rotce": 0.2155783161302306, "pretax_margin": 0.31076509307098876}, {"end": "2026-03-31", "roe": 0.17364259566067125, "rotce": 0.22509870493974818, "pretax_margin": 0.31871376860898676}, {"end": "2026-06-30", "roe": 0.19069034646583388, "rotce": 0.24569496467985621, "pretax_margin": 0.33503754388662516}], "SCHW": [{"end": "2024-09-30", "roe": 0.14071483255024994, "rotce": 0.35437774081354906, "pretax_margin": 0.35124893253629375}, {"end": "2024-12-31", "roe": 0.15441642823920734, "rotce": 0.3528957031501643, "pretax_margin": 0.392328878914618}, {"end": "2025-03-31", "roe": 0.16379978515385976, "rotce": 0.3554126220753548, "pretax_margin": 0.40796481798192036}, {"end": "2025-06-30", "roe": 0.17531310522918012, "rotce": 0.35677124389090337, "pretax_margin": 0.4348931841302136}, {"end": "2025-09-30", "roe": 0.19262198524397048, "rotce": 0.3742230787761985, "pretax_margin": 0.46190102120974075}, {"end": "2025-12-31", "roe": 0.20567895804315423, "rotce": 0.3917799292496742, "pretax_margin": 0.47903515739308555}, {"end": "2026-03-31", "roe": 0.21784976627894337, "rotce": 0.41448729144643104, "pretax_margin": 0.4915336236090953}, {"end": "2026-06-30", "roe": 0.22446953429844613, "rotce": 0.408393018420113, "pretax_margin": 0.5017483189241114}]}, "trend_hidden": ["AMP"]};
+
+const FOCUS = DATA.focus;
+const METRIC = Object.fromEntries(DATA.metrics.map(m => [m.key, m]));
+const companies = DATA.companies;
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const NS = "http://www.w3.org/2000/svg";
+
+function fmt(v, kind) {
+  if (v === null || v === undefined || !isFinite(v)) return "n/a";
+  if (kind === "pct") return (v * 100).toFixed(1) + "%";
+  if (kind === "x") return v.toFixed(1) + "x";
+  const sign = v < 0 ? "-" : "";
+  if (kind === "usd") return sign + "$" + Math.abs(v).toFixed(2);
+  if (kind === "bn") return sign + "$" + Math.abs(v).toFixed(1) + "bn";
+  return String(v);
+}
+function niceTicks(min, max, count) {
+  const span = (max - min) || Math.abs(max) || 1;
+  const raw = span / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(s => s >= raw);
+  const start = Math.floor(min / step) * step, end = Math.ceil(max / step) * step;
+  const out = [];
+  for (let v = start; v <= end + step / 2; v += step) out.push(Math.round(v / step) * step);
+  return out;
+}
+function el(tag, attrs = {}, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function niceDate(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function quarterLabel(iso) {
+  const d = new Date(iso + "T00:00:00");
+  return "Q" + (Math.floor(d.getMonth() / 3) + 1) + " " + String(d.getFullYear()).slice(2);
+}
+
+// Tooltip -----------------------------------------------------------------
+const tip = document.getElementById("tip");
+function showTip(evt, html) {
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + w > window.innerWidth - 8) x = evt.clientX - w - pad;
+  if (y + h > window.innerHeight - 8) y = evt.clientY - h - pad;
+  tip.style.left = x + "px";
+  tip.style.top = y + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+
+// Header and tiles ----------------------------------------------------------
+const focusCo = companies.find(c => c.ticker === FOCUS);
+const priceNote = focusCo && focusCo.price ? ` Prices as of ${niceDate(focusCo.price.as_of)}.` : "";
+document.getElementById("meta").textContent =
+  `Updated ${DATA.generated_at}. Latest filings through ${niceDate(companies.map(c => c.period_end).sort().at(-1))}.${priceNote}`;
+
+function rankOf(key, ticker) {
+  const vals = companies.filter(c => c.metrics[key] != null).sort((a, b) => b.metrics[key] - a.metrics[key]);
+  const i = vals.findIndex(c => c.ticker === ticker);
+  return i < 0 ? null : { rank: i + 1, of: vals.length };
+}
+const tileKeys = ["roe", "rotce", "pretax_margin", "pe"];
+const tileLabels = { roe: "Return on equity", rotce: "Return on tangible equity", pretax_margin: "Pre-tax margin", pe: "P/E on trailing EPS" };
+const tiles = document.getElementById("tiles");
+for (const key of tileKeys) {
+  const m = METRIC[key];
+  const v = focusCo ? focusCo.metrics[key] : null;
+  const r = focusCo ? rankOf(key, FOCUS) : null;
+  const div = document.createElement("div");
+  div.className = "tile";
+  div.innerHTML = `<div class="label">RJF ${tileLabels[key]}</div>
+    <div class="value">${fmt(v, m.fmt)}</div>
+    <div class="compare">Peer median ${fmt(DATA.peer_median[key], m.fmt)}${r ? ` · ${ordinal(r.rank)} highest of ${r.of}` : ""}</div>`;
+  tiles.appendChild(div);
+}
+
+// Bar chart ---------------------------------------------------------------
+const barSelect = document.getElementById("bar-metric");
+let group = "";
+for (const m of DATA.metrics) {
+  if (m.group !== group) {
+    group = m.group;
+    const og = document.createElement("optgroup");
+    og.label = group;
+    barSelect.appendChild(og);
+  }
+  const opt = new Option(m.label, m.key);
+  barSelect.lastChild.appendChild(opt);
+}
+barSelect.value = "roe";
+barSelect.addEventListener("change", drawBars);
+
+function drawBars() {
+  const key = barSelect.value, m = METRIC[key];
+  const host = document.getElementById("bar-chart");
+  host.innerHTML = "";
+  const rows = companies.map(c => ({ c, v: c.metrics[key] }))
+    .sort((a, b) => (b.v ?? -Infinity) - (a.v ?? -Infinity));
+  const narrow = host.clientWidth < 560;
+  const W = Math.max(host.clientWidth, 320), rowH = 34, top = 6, labelW = narrow ? 56 : 200, right = 70;
+  const H = top + rows.length * rowH + 22;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${m.label} by company` }, host);
+  const vals = rows.map(r => r.v).filter(v => v != null);
+  const median = DATA.peer_median[key];
+  const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals, median ?? 0);
+  const x = v => labelW + ((v - lo) / ((hi - lo) || 1)) * (W - labelW - right);
+  el("line", { x1: x(0), x2: x(0), y1: top - 4, y2: H - 20, stroke: css("--border") }, svg);
+  const medianLayer = el("g", {}, svg);
+
+  rows.forEach((r, i) => {
+    const y = top + i * rowH, isFocus = r.c.ticker === FOCUS;
+    const name = el("text", { x: 0, y: y + rowH / 2 + 4 }, svg);
+    name.textContent = narrow ? r.c.ticker : `${r.c.ticker}  ${r.c.name}`;
+    if (isFocus) { name.style.fill = css("--text-primary"); name.style.fontWeight = "600"; }
+    if (r.v == null) {
+      const na = el("text", { x: x(0) + 6, y: y + rowH / 2 + 4 }, svg);
+      na.textContent = "not comparable";
+      na.style.fill = css("--text-muted");
+    } else {
+      const x0 = Math.min(x(0), x(r.v)), w = Math.max(Math.abs(x(r.v) - x(0)), 2);
+      el("rect", { x: x0, y: y + 7, width: w, height: rowH - 14, rx: 4, fill: isFocus ? css("--focus") : css("--peer") }, svg);
+      const lab = el("text", { class: "halo", x: r.v >= 0 ? x(r.v) + 6 : x(r.v) - 6, y: y + rowH / 2 + 4, "text-anchor": r.v >= 0 ? "start" : "end" }, svg);
+      lab.textContent = fmt(r.v, m.fmt);
+      lab.style.fill = css("--text-primary");
+    }
+    const hit = el("rect", { x: 0, y, width: W, height: rowH, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", e => showTip(e, cellTip(r.c, key)));
+    hit.addEventListener("mouseleave", hideTip);
+  });
+  if (median != null) {
+    el("line", { x1: x(median), x2: x(median), y1: top - 4, y2: H - 20, stroke: css("--median"), "stroke-width": 1.5, "stroke-dasharray": "4 4" }, medianLayer);
+    const t = el("text", { x: x(median), y: H - 4, "text-anchor": "middle" }, svg);
+    t.textContent = `Peer median ${fmt(median, m.fmt)}`;
+  }
+}
+
+function cellTip(c, key) {
+  const m = METRIC[key], v = c.metrics[key];
+  const source = { roe: "net_income_common", rotce: "net_income_common", pretax_margin: "pretax_income",
+    comp_ratio: "compensation", net_revenue: "net_revenue", revenue_growth: "net_revenue",
+    net_income_common: "net_income_common", eps_diluted: "eps_diluted", bvps: "total_equity",
+    tbvps: "total_equity", equity_to_assets: "assets" }[key];
+  const tag = source && c.tags[source] ? `<div class="muted">XBRL: ${c.tags[source]}</div>` : "";
+  const price = ["pe", "pb", "ptbv", "div_yield", "market_cap"].includes(key) && c.price
+    ? `<div class="muted">Price $${c.price.price.toFixed(2)} on ${niceDate(c.price.as_of)}</div>` : "";
+  return `<b>${c.name}</b><div>${m.label}: <b>${fmt(v, m.fmt)}</b></div>
+    <div class="muted">Period ending ${niceDate(c.period_end)} (${c.filing.form})</div>${tag}${price}`;
+}
+
+// Trend chart -------------------------------------------------------------
+const trendSegs = document.getElementById("trend-metric");
+let trendKey = DATA.trend_metrics[0];
+for (const key of DATA.trend_metrics) {
+  const b = document.createElement("button");
+  b.className = "seg";
+  b.textContent = METRIC[key].label;
+  b.setAttribute("aria-pressed", key === trendKey);
+  b.addEventListener("click", () => {
+    trendKey = key;
+    trendSegs.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    drawTrend();
+  });
+  trendSegs.appendChild(b);
+}
+const hidden = new Set(DATA.trend_hidden || []);
+const legend = document.getElementById("trend-legend");
+legend.innerHTML = `<span class="chip static"><i class="swatch" style="background:var(--focus)"></i>Raymond James</span>`;
+for (const c of companies.filter(c => c.ticker !== FOCUS)) {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.innerHTML = `<i class="swatch" style="background:var(--peer-line)"></i>${c.ticker}`;
+  b.setAttribute("aria-pressed", !hidden.has(c.ticker));
+  b.title = "Show or hide this peer";
+  b.addEventListener("click", () => {
+    hidden.has(c.ticker) ? hidden.delete(c.ticker) : hidden.add(c.ticker);
+    b.setAttribute("aria-pressed", !hidden.has(c.ticker));
+    drawTrend();
+  });
+  legend.appendChild(b);
+}
+if (hidden.size) {
+  const note = document.createElement("span");
+  note.textContent = `Click a ticker to show or hide it. ${[...hidden].join(", ")} starts hidden because its outlier values flatten the other lines.`;
+  legend.appendChild(note);
+}
+
+function drawTrend() {
+  const key = trendKey, m = METRIC[key];
+  const host = document.getElementById("trend-chart");
+  host.innerHTML = "";
+  const dates = [...new Set(Object.values(DATA.trend).flat().map(p => p.end))].sort().slice(-8);
+  const series = companies.map(c => ({
+    c, pts: (DATA.trend[c.ticker] || []).filter(p => dates.includes(p.end) && p[key] != null)
+  })).filter(s => s.pts.length && !hidden.has(s.c.ticker));
+  const W = Math.max(host.clientWidth, 320), H = 300, L = 48, R = 64, T = 10, B = 28;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${m.label} trend` }, host);
+  const all = series.flatMap(s => s.pts.map(p => p[key]));
+  const tickVals = niceTicks(Math.min(...all), Math.max(...all), 5);
+  const lo = tickVals[0], hi = tickVals.at(-1);
+  const x = d => L + (dates.indexOf(d) / Math.max(dates.length - 1, 1)) * (W - L - R);
+  const y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+
+  for (const v of tickVals) {
+    el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: css("--grid") }, svg);
+    const t = el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
+    t.textContent = fmt(v, m.fmt);
+  }
+  dates.forEach(d => {
+    const t = el("text", { x: x(d), y: H - 8, "text-anchor": "middle" }, svg);
+    t.textContent = quarterLabel(d);
+  });
+
+  const ordered = [...series].sort((a, b) => (a.c.ticker === FOCUS) - (b.c.ticker === FOCUS));
+  const ends = [];
+  for (const s of ordered) {
+    const isFocus = s.c.ticker === FOCUS;
+    const d = s.pts.map((p, i) => `${i ? "L" : "M"}${x(p.end)},${y(p[key])}`).join(" ");
+    el("path", { d, fill: "none", stroke: isFocus ? css("--focus") : css("--peer-line"),
+      "stroke-width": isFocus ? 2.5 : 1.5, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    const last = s.pts.at(-1);
+    if (isFocus) el("circle", { cx: x(last.end), cy: y(last[key]), r: 4, fill: css("--focus"), stroke: css("--surface-1"), "stroke-width": 2 }, svg);
+    ends.push({ ticker: s.c.ticker, x: x(last.end), y: y(last[key]), isFocus });
+  }
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].y = ends[i - 1].y + 13;
+  for (const e of ends) {
+    const t = el("text", { x: e.x + 8, y: e.y + 4 }, svg);
+    t.textContent = e.ticker;
+    if (e.isFocus) { t.style.fill = css("--text-primary"); t.style.fontWeight = "600"; }
+  }
+
+  const cross = el("line", { y1: T, y2: H - B, stroke: css("--median"), "stroke-width": 1, visibility: "hidden" }, svg);
+  const hit = el("rect", { x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent" }, svg);
+  hit.addEventListener("mousemove", evt => {
+    const box = svg.getBoundingClientRect();
+    const px = (evt.clientX - box.left) * (W / box.width);
+    const d = dates.reduce((best, cur) => Math.abs(x(cur) - px) < Math.abs(x(best) - px) ? cur : best, dates[0]);
+    cross.setAttribute("x1", x(d)); cross.setAttribute("x2", x(d)); cross.setAttribute("visibility", "visible");
+    const rows = series.map(s => ({ s, p: s.pts.find(p => p.end === d) })).filter(r => r.p)
+      .sort((a, b) => b.p[key] - a.p[key])
+      .map(r => `<div>${r.s.c.ticker === FOCUS ? "<b>" : ""}${r.s.c.ticker}: ${fmt(r.p[key], m.fmt)}${r.s.c.ticker === FOCUS ? "</b>" : ""}</div>`).join("");
+    showTip(evt, `<b>Quarter ending ${niceDate(d)}</b>${rows}`);
+  });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+}
+
+// Table -------------------------------------------------------------------
+let sortKey = null, sortDir = -1;
+function drawTable() {
+  const table = document.getElementById("table");
+  const rows = [...companies];
+  if (sortKey) rows.sort((a, b) => sortDir * ((a.metrics[sortKey] ?? -Infinity) - (b.metrics[sortKey] ?? -Infinity)));
+  let html = "<thead><tr><th scope=\"col\">Company</th>";
+  for (const m of DATA.metrics) {
+    const sorted = sortKey === m.key ? ` aria-sort="${sortDir < 0 ? "descending" : "ascending"}"` : "";
+    html += `<th scope="col" data-key="${m.key}"${sorted}>${m.label}${sortKey === m.key ? (sortDir < 0 ? " ↓" : " ↑") : ""}</th>`;
+  }
+  html += "</tr></thead><tbody>";
+  for (const c of rows) {
+    html += `<tr class="${c.ticker === FOCUS ? "focus" : ""}"><td>${c.ticker} <span style="color:var(--text-muted);font-weight:400">${c.name}</span></td>`;
+    for (const m of DATA.metrics) {
+      const v = c.metrics[m.key];
+      html += `<td class="${v == null ? "na" : ""}" data-t="${c.ticker}" data-k="${m.key}">${fmt(v, m.fmt)}</td>`;
+    }
+    html += "</tr>";
+  }
+  html += `<tr class="median"><td>Peer median</td>${DATA.metrics.map(m => `<td>${fmt(DATA.peer_median[m.key], m.fmt)}</td>`).join("")}</tr>`;
+  table.innerHTML = html + "</tbody>";
+  table.querySelectorAll("th[data-key]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.key;
+    sortDir = sortKey === k ? -sortDir : -1;
+    sortKey = k;
+    drawTable();
+  }));
+  table.querySelectorAll("td[data-k]").forEach(td => {
+    const c = companies.find(x => x.ticker === td.dataset.t);
+    td.addEventListener("mousemove", e => showTip(e, cellTip(c, td.dataset.k)));
+    td.addEventListener("mouseleave", hideTip);
+  });
+}
+
+// Notes ---------------------------------------------------------------------
+const notesHost = document.getElementById("company-notes");
+let notesHtml = "<ul>";
+for (const c of companies) {
+  const filing = `<a href="${c.filing.url}">${c.filing.form} filed ${niceDate(c.filing.filed)}</a>`;
+  notesHtml += `<li><b>${c.ticker}</b>: latest data from ${filing}.${c.notes.length ? " " + c.notes.join(" ") : ""}</li>`;
+}
+notesHost.innerHTML = notesHtml + "</ul>";
+
+function drawAll() { drawBars(); drawTrend(); drawTable(); }
+drawAll();
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { drawBars(); drawTrend(); }, 150); });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+</script>
+</body>
+</html>
