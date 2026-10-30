@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-29 01:55 UTC",
+  "generated_at": "2026-10-30 02:06 UTC",
   "focus": "RJF",
   "metrics": [
     {
@@ -116,8 +116,8 @@
         "url": "https://www.sec.gov/Archives/edgar/data/720005/000072000526000070/0000720005-26-000070-index.htm"
       },
       "price": {
-        "price": 157.42,
-        "as_of": "2026-10-28",
+        "price": 161.29,
+        "as_of": "2026-10-29",
         "source": "Yahoo Finance"
       },
       "metrics": {
@@ -132,11 +132,11 @@
         "eps_diluted": 11.47,
         "bvps": 66.01625621847374,
         "tbvps": 52.45846456418762,
-        "pe": 13.724498692240626,
-        "pb": 2.3845641818741634,
-        "ptbv": 3.00085031668021,
-        "div_yield": 0.01346715792148393,
-        "market_cap": 30.28158054562
+        "pe": 14.061900610287706,
+        "pb": 2.4431861065587843,
+        "ptbv": 3.074622967712813,
+        "div_yield": 0.013144026288052578,
+        "market_cap": 31.02602036719
       },
       "tags": {
         "net_revenue": "RevenuesNetOfInterestExpense",
@@ -168,8 +168,8 @@
         "url": "https://www.sec.gov/Archives/edgar/data/720672/000119312526333953/0001193125-26-333953-index.htm"
       },
       "price": {
-        "price": 66.88,
-        "as_of": "2026-10-28",
+        "price": 68.36,
+        "as_of": "2026-10-29",
         "source": "Yahoo Finance"
       },
       "metrics": {
@@ -184,11 +184,11 @@
         "eps_diluted": 7.549999999999999,
         "bvps": 34.546474836936085,
         "tbvps": 24.47958297132928,
-        "pe": 8.858278145695365,
-        "pb": 1.9359428224061184,
-        "ptbv": 2.732072685973878,
-        "div_yield": 0.028409090909090908,
-        "market_cap": 10.31516992
+        "pe": 9.054304635761591,
+        "pb": 1.978783662375632,
+        "ptbv": 2.792531232254401,
+        "div_yield": 0.027794031597425394,
+        "market_cap": 10.54343624
       },
       "tags": {
         "net_revenue": "RevenuesNetOfInterestExpense",
@@ -210,34 +210,34 @@
       "ticker": "LPLA",
       "name": "LPL Financial",
       "cik": 1397911,
-      "period_end": "2026-06-30",
+      "period_end": "2026-09-30",
       "filing": {
         "form": "10-Q",
-        "filed": "2026-08-03",
-        "url": "https://www.sec.gov/Archives/edgar/data/1397911/000162828026051542/0001628280-26-051542-index.htm"
+        "filed": "2026-10-29",
+        "url": "https://www.sec.gov/Archives/edgar/data/1397911/000162828026068226/0001628280-26-068226-index.htm"
       },
       "price": {
-        "price": 269.19,
-        "as_of": "2026-10-28",
+        "price": 279.54,
+        "as_of": "2026-10-29",
         "source": "Yahoo Finance"
       },
       "metrics": {
-        "net_revenue": 19.609504,
-        "net_income_common": 1.006867,
-        "revenue_growth": 0.38820710535073566,
+        "net_revenue": 20.401557,
+        "net_income_common": 1.392945,
+        "revenue_growth": 0.31036580822846926,
         "pretax_margin": null,
         "comp_ratio": null,
-        "roe": 0.1859187891044215,
+        "roe": 0.2566397328630481,
         "rotce": null,
-        "equity_to_assets": 0.2908799501998876,
-        "eps_diluted": 12.48,
-        "bvps": 73.10988796490425,
-        "tbvps": -4.55178532399807,
-        "pe": 21.569711538461537,
-        "pb": 3.681991690771326,
+        "equity_to_assets": 0.29250813512613094,
+        "eps_diluted": 17.450000000000003,
+        "bvps": 74.64282083159958,
+        "tbvps": -4.6187534347207,
+        "pe": 16.019484240687678,
+        "pb": 3.745035314657595,
         "ptbv": null,
         "div_yield": null,
-        "market_cap": 21.196637045099997
+        "market_cap": 21.767336170020002
       },
       "tags": {
         "net_revenue": "Revenues",
@@ -267,8 +267,8 @@
         "url": "https://www.sec.gov/Archives/edgar/data/820027/000082002726000043/0000820027-26-000043-index.htm"
       },
       "price": {
-        "price": 489.8,
-        "as_of": "2026-10-28",
+        "price": 497.9,
+        "as_of": "2026-10-29",
         "source": "Yahoo Finance"
       },
       "metrics": {
@@ -283,11 +283,11 @@
         "eps_diluted": 41.39,
         "bvps": 72.06801780879286,
         "tbvps": 42.634017447049,
-        "pe": 11.83377627446243,
-        "pb": 6.796357314828779,
-        "ptbv": 11.488478668667021,
+        "pe": 12.02947571877265,
+        "pb": 6.908751137307571,
+        "ptbv": 11.678467801407328,
         "div_yield": null,
-        "market_cap": 43.265610666200004
+        "market_cap": 43.981109740099996
       },
       "tags": {
         "net_revenue": "RevenuesNetOfInterestExpense",
@@ -318,8 +318,8 @@
         "url": "https://www.sec.gov/Archives/edgar/data/895421/000089542126000212/0000895421-26-000212-index.htm"
       },
       "price": {
-        "price": 190.13,
-        "as_of": "2026-10-28",
+        "price": 190.0,
+        "as_of": "2026-10-29",
         "source": "Yahoo Finance"
       },
       "metrics": {
@@ -334,11 +334,11 @@
         "eps_diluted": 12.379999999999999,
         "bvps": 67.86023649105542,
         "tbvps": 53.229844818291824,
-        "pe": 15.357835218093701,
-        "pb": 2.8017880548509555,
-        "ptbv": 3.5718683879135416,
-        "div_yield": 0.021038236995739756,
-        "market_cap": 298.61176909796
+        "pe": 15.347334410339258,
+        "pb": 2.7998723527148877,
+        "ptbv": 3.5694261489695096,
+        "div_yield": 0.021052631578947364,
+        "market_cap": 298.40759548
       },
       "tags": {
         "net_revenue": "RevenuesNetOfInterestExpense",
@@ -369,8 +369,8 @@
         "url": "https://www.sec.gov/Archives/edgar/data/316709/000031670926000031/0000316709-26-000031-index.htm"
       },
       "price": {
-        "price": 88.76,
-        "as_of": "2026-10-28",
+        "price": 89.47,
+        "as_of": "2026-10-29",
         "source": "Yahoo Finance"
       },
       "metrics": {
@@ -385,11 +385,11 @@
         "eps_diluted": 5.49,
         "bvps": 25.40513079347646,
         "tbvps": 14.086911987524013,
-        "pe": 16.16757741347905,
-        "pb": 3.493782445819639,
-        "ptbv": 6.300884117016544,
-        "div_yield": 0.013294276701216766,
-        "market_cap": 153.49583797464
+        "pe": 16.296903460837886,
+        "pb": 3.5217295564159876,
+        "ptbv": 6.351285510922376,
+        "div_yield": 0.013188778361461944,
+        "market_cap": 154.72366633157998
       },
       "tags": {
         "net_revenue": "Revenues",
@@ -409,22 +409,22 @@
     }
   ],
   "peer_median": {
-    "roe": 0.19069034646583388,
+    "roe": 0.22446953429844613,
     "rotce": 0.333382703307609,
     "pretax_margin": 0.2970373075532188,
     "comp_ratio": 0.4002203941467415,
     "revenue_growth": 0.18000514084400554,
-    "net_revenue": 19.609504,
+    "net_revenue": 20.401557,
     "net_income_common": 3.948,
     "eps_diluted": 12.379999999999999,
     "bvps": 67.86023649105542,
     "tbvps": 24.47958297132928,
     "equity_to_assets": 0.09694625202507028,
-    "pe": 15.357835218093701,
-    "pb": 3.493782445819639,
-    "ptbv": 4.936376252465043,
-    "div_yield": 0.021038236995739756,
-    "market_cap": 43.265610666200004
+    "pe": 15.347334410339258,
+    "pb": 3.5217295564159876,
+    "ptbv": 4.960355829945943,
+    "div_yield": 0.021052631578947364,
+    "market_cap": 43.981109740099996
   },
   "trend": {
     "RJF": [
@@ -529,12 +529,6 @@
     ],
     "LPLA": [
       {
-        "end": "2024-09-30",
-        "roe": 0.41355487554446535,
-        "rotce": null,
-        "pretax_margin": null
-      },
-      {
         "end": "2024-12-31",
         "roe": 0.4226365438546657,
         "rotce": null,
@@ -573,6 +567,12 @@
       {
         "end": "2026-06-30",
         "roe": 0.1859187891044215,
+        "rotce": null,
+        "pretax_margin": null
+      },
+      {
+        "end": "2026-09-30",
+        "roe": 0.2566397328630481,
         "rotce": null,
         "pretax_margin": null
       }
